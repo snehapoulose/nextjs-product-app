@@ -1,15 +1,17 @@
 "use client";
 
 import { useState } from "react";
-import { LoginFormData } from "../types/login";
+import { LoginFormData, RoleTypes } from "../types/login";
+import { useRouter } from "next/navigation";
 
 export default function Login() {
+  const router = useRouter();
   const [formData, setFormData] = useState<LoginFormData>({
     email: "",
     password: "",
-    role:"user",
+    role:RoleTypes.user,
   });
-
+const [error,setError] = useState<string|null>(null);
   const handleChange = (e: React.ChangeEvent<HTMLInputElement| HTMLSelectElement>) => {
     const name = e.target.name;
     const value = e.target.value;
@@ -18,6 +20,7 @@ export default function Login() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null);
     const res = await fetch("/api/login", {
       method: "POST",
       headers: {
@@ -26,9 +29,18 @@ export default function Login() {
       body: JSON.stringify(formData),
     });
     if (res.ok) {
-      alert("Login Successful!");
+     if(formData.role === RoleTypes.admin){
+      router.push("/admin")
+     }
+     else if (formData.role === RoleTypes.user){
+      router.push("/user")
+     }
+     else {
+      router.push("/")
+     }
+
     } else {
-      alert("Login failed");
+      setError("Invalid credentials");
     }
   };
 
@@ -70,6 +82,7 @@ export default function Login() {
         >
           Login
         </button>
+        {error && <p className="text-red-800">{error}</p>}
       </form>
     </div>
   );
